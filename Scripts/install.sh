@@ -65,13 +65,14 @@ trap 'error_handler ${LINENO} "$BASH_COMMAND"' ERR
 
 # Usage information
 usage() {
+    local exit_code=${1:-0}
     echo -e "Usage: $0 [OPTIONS]"
     echo -e "Options:"
     echo -e "  -u, --unattended    Run in unattended mode (no prompts, assumes yes)"
     echo -e "  -f, --force         Bypass checks (e.g., Wayland session)"
     echo -e "  -l, --log FILE      Specify log file (default: install_TIMESTAMP.log)"
     echo -e "  -h, --help          Show this help message"
-    exit 0
+    exit "$exit_code"
 }
 
 # Parse arguments
@@ -87,15 +88,19 @@ parse_args() {
                 shift
                 ;;
             -l|--log)
+                if [[ -z "${2-}" ]] || [[ "${2:0:1}" == "-" ]]; then
+                    echo -e "${RED}Error: Argument for $1 is missing.${RESET}"
+                    usage 1
+                fi
                 LOG_FILE="$2"
                 shift 2
                 ;;
             -h|--help)
-                usage
+                usage 0
                 ;;
             *)
                 log ERROR "Unknown option: $1"
-                usage
+                usage 1
                 ;;
         esac
     done
